@@ -13,11 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.androidpractice.R
 import com.example.androidpractice.ui.theme.AndroidPracticeTheme
 import com.example.androidpractice.ui.theme.Typography
 
@@ -42,7 +44,7 @@ fun MainActivityScreen() {
                         },
                         label = {
                             Text(
-                                text = "Список фильмов",
+                                text = stringResource(R.string.movie_list_label),
                                 color = Color.White,
                                 style = Typography.labelSmall
                             )
@@ -50,7 +52,7 @@ fun MainActivityScreen() {
                         },
                         selected = false,
                         onClick = {
-                            navController.navigate("list")
+                            navController.navigate(Screen.List.route)
                         }
                     )
                 }
@@ -58,11 +60,11 @@ fun MainActivityScreen() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "list",
+                startDestination = Screen.List.route,
                 Modifier.padding(innerPadding)
             ) {
-                composable("list") { ListScreen(navController) }
-                composable("details/{movieId}") { backStackEntry ->
+                composable(route = Screen.List.route) { ListScreen(navController) }
+                composable(route = Screen.Details.route) { backStackEntry ->
                     val movieId = backStackEntry.arguments?.getString("movieId")?.toInt() ?: 0
                     DetailsScreen(navController, movieId)
                 }

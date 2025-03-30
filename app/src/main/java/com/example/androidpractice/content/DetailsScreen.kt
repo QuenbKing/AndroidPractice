@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
+import com.example.androidpractice.R
 import com.example.androidpractice.domain.model.Movie
 import com.example.androidpractice.domain.model.Rating
 import com.example.androidpractice.ui.theme.Spacing
@@ -92,12 +94,12 @@ private fun MovieScreenContent(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(Spacing.medium),
+            verticalArrangement = Arrangement.spacedBy(Spacing.bottom)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp)
             ) {
                 AsyncImage(
                     model = movie.poster.url,
@@ -112,47 +114,44 @@ private fun MovieScreenContent(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.bottom)
                 ) {
                     Text(
                         text = styledText(
-                            sectionName = "Год выхода: ",
+                            sectionName = stringResource(R.string.year),
                             sectionContent = movie.year
                         ),
-                        modifier = Modifier.padding(bottom = 12.dp)
                     )
 
                     Text(
                         text = styledText(
-                            sectionName = "Описание: ",
+                            sectionName = stringResource(R.string.description),
                             sectionContent = movie.description
                         ),
-                        modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
             }
 
             Text(
                 text = styledText(
-                    sectionName = "Жанры: ",
-                    sectionContent = movie.genres.joinToString(separator = ", ") {it.name}
+                    sectionName = stringResource(R.string.genres),
+                    sectionContent = movie.genres.joinToString(separator = stringResource(R.string.separator)) {it.name}
                 ),
-                modifier = Modifier.padding(bottom = 12.dp)
             )
 
             Spacer(modifier = Modifier.height(Spacing.medium))
 
             Text(
                 text = styledText(
-                    sectionName = "Страны: ",
-                    sectionContent = movie.countries.joinToString(separator = ", ") {it.name}
+                    sectionName = stringResource(R.string.countries),
+                    sectionContent = movie.countries.joinToString(separator = stringResource(R.string.separator)) {it.name}
                 ),
-                modifier = Modifier.padding(bottom = 12.dp)
             )
 
             Spacer(modifier = Modifier.height(Spacing.medium))
 
-            Text(text = "В главных ролях:", style = Typography.bodyLarge)
+            Text(text = stringResource(R.string.actors), style = Typography.bodyLarge)
             LazyRow(
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {
@@ -194,25 +193,22 @@ fun RatingDisplay(rating: Rating) {
         modifier = Modifier
             .padding(vertical = 12.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.horizontal, Alignment.CenterHorizontally)
     ) {
         Text(
             text = "Kinopoisk: ${rating.kinopoisk}",
             style = Typography.bodyLarge.copy(color = Color.Gray),
             fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 10.dp)
         )
         Text(
             text = "IMDB: ${rating.imdb}",
             style = Typography.bodyLarge.copy(color = Color.Gray),
             fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 10.dp)
         )
         Text(
             text = "Rotten Tomatoes: ${rating.rottenTomatoes}",
             style = Typography.bodyLarge.copy(color = Color.Gray),
             fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 10.dp)
         )
     }
 }

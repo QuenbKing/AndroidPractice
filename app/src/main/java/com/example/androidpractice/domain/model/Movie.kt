@@ -1,6 +1,6 @@
 package com.example.androidpractice.domain.model
 
-class Movie(
+data class Movie(
     val id: Int,
     val name: String,
     val rating: Rating,

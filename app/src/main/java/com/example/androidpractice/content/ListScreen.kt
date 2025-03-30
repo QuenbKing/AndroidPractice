@@ -17,6 +17,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.androidpractice.domain.model.Movie
+import com.example.androidpractice.ui.theme.Spacing
 import com.example.androidpractice.ui.theme.Typography
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -34,6 +37,7 @@ import com.example.androidpractice.viewModel.ListViewModel
 @Composable
 fun ListScreen(navigation: NavHostController) {
     val viewModel = koinViewModel<ListViewModel> { parametersOf(navigation) }
+    val state by viewModel.viewState.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,35 +55,35 @@ fun ListScreen(navigation: NavHostController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            List(
-                viewModel.loadMovies(),
-                viewModel
+            MovieList(
+                state.movies,
+                onMovieClick = { movieId -> viewModel.onItemClicked(movieId) }
             )
         }
     }
 }
 
 @Composable
-fun List(list: List<Movie>, viewModel: ListViewModel) {
+fun MovieList(list: List<Movie>, onMovieClick: (Int) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(Spacing.medium)
     ) {
         items(list) { movie ->
-            MovieCard(movie, viewModel)
+            MovieCard(movie, onMovieClick)
         }
     }
 }
 
 @Composable
-fun MovieCard(movie: Movie, viewModel: ListViewModel) {
+fun MovieCard(movie: Movie, onMovieClick: (Int) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .shadow(4.dp),
-        onClick = { viewModel.onItemClicked(movie.id) }
+        onClick = { onMovieClick(movie.id) }
     ) {
         Row(
             modifier = Modifier

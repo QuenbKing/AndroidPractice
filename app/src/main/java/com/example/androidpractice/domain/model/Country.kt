@@ -1,5 +1,5 @@
 package com.example.androidpractice.domain.model
 
-class Country(
+data class Country(
     val name: String
 )

@@ -1,5 +1,5 @@
 package com.example.androidpractice.domain.model
 
-class Genre(
+data class Genre(
     val name: String
 )

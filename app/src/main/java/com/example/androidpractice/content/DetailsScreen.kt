@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,6 +65,7 @@ private fun MovieScreenContent(
     movie: Movie?,
     onBackPressed: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,7 +97,8 @@ private fun MovieScreenContent(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(Spacing.medium),
+                .padding(Spacing.medium)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(Spacing.bottom)
         ) {
             Row(

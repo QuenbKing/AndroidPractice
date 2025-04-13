@@ -1,9 +1,10 @@
 package com.example.androidpractice.domain.repository
 
 import com.example.androidpractice.domain.model.Movie
+import com.example.androidpractice.domain.model.MovieShort
 
 interface IMoviesRepository {
-    fun getList(): List<Movie>
+    suspend fun getList(query: String): List<MovieShort>
 
-    fun getById(id: Int): Movie?
+    suspend fun getById(id: Int): Movie?
 }

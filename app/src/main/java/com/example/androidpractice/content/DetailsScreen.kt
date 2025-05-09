@@ -140,7 +140,7 @@ private fun MovieScreenContent(
             Text(
                 text = styledText(
                     sectionName = stringResource(R.string.genres),
-                    sectionContent = movie.genres.joinToString(separator = stringResource(R.string.separator)) {it.name}
+                    sectionContent = movie.genres.joinToString(separator = stringResource(R.string.separator)) { it.displayName }
                 ),
             )
 
@@ -149,7 +149,7 @@ private fun MovieScreenContent(
             Text(
                 text = styledText(
                     sectionName = stringResource(R.string.countries),
-                    sectionContent = movie.countries.joinToString(separator = stringResource(R.string.separator)) {it.name}
+                    sectionContent = movie.countries.joinToString(separator = stringResource(R.string.separator)) { it }
                 ),
             )
 
@@ -197,7 +197,10 @@ fun RatingDisplay(rating: Rating) {
         modifier = Modifier
             .padding(vertical = 12.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.horizontal, Alignment.CenterHorizontally)
+        horizontalArrangement = Arrangement.spacedBy(
+            Spacing.horizontal,
+            Alignment.CenterHorizontally
+        )
     ) {
         Text(
             text = "Kinopoisk: ${rating.kinopoisk}",
@@ -223,18 +226,22 @@ fun styledText(
     sectionContent: String,
 ): AnnotatedString {
     return buildAnnotatedString {
-        withStyle(style = SpanStyle(
-            fontWeight = Typography.bodyLarge.fontWeight,
-            fontSize = Typography.bodyLarge.fontSize,
-            color = Typography.bodyLarge.color
-        )) {
+        withStyle(
+            style = SpanStyle(
+                fontWeight = Typography.bodyLarge.fontWeight,
+                fontSize = Typography.bodyLarge.fontSize,
+                color = Typography.bodyLarge.color
+            )
+        ) {
             append(sectionName)
         }
-        withStyle(style = SpanStyle(
-            fontWeight = Typography.bodyMedium.fontWeight,
-            fontSize = Typography.bodyMedium.fontSize,
-            color = Typography.bodyMedium.color
-        )) {
+        withStyle(
+            style = SpanStyle(
+                fontWeight = Typography.bodyMedium.fontWeight,
+                fontSize = Typography.bodyMedium.fontSize,
+                color = Typography.bodyMedium.color
+            )
+        ) {
             append(sectionContent)
         }
     }

@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-parcelize")
+    id("com.google.devtools.ksp") version "2.0.0-RC2-1.0.20"
 }
 
 android {
@@ -59,6 +61,11 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    annotationProcessor(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
     debugImplementation("com.github.chuckerteam.chucker:library:4.1.0")
     releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.1.0")
     testImplementation(libs.junit)

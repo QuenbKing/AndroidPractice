@@ -8,6 +8,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -43,10 +45,11 @@ fun MainActivityScreen() {
                         label = getLabel(stringResource(R.string.movie_list_label)),
                         selected = false,
                         onClick = {
-                            navController.navigate(Screen.List.route)
+                            navController.navigate(Screen.List.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     )
-
                     BottomNavigationItem(
                         icon = getIcon(
                             icon = Icons.Filled.Favorite,
@@ -55,7 +58,22 @@ fun MainActivityScreen() {
                         label = getLabel(stringResource(R.string.favorites_label)),
                         selected = false,
                         onClick = {
-                            navController.navigate(Screen.Favorites.route)
+                            navController.navigate(Screen.Favorites.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                    BottomNavigationItem(
+                        icon = getIcon(
+                            icon = Icons.Filled.Person,
+                            contentDescription = "Profile"
+                        ),
+                        label = getLabel(stringResource(R.string.profile_label)),
+                        selected = false,
+                        onClick = {
+                            navController.navigate(Screen.Profile.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     )
                 }
@@ -66,12 +84,14 @@ fun MainActivityScreen() {
                 startDestination = Screen.List.route,
                 Modifier.padding(innerPadding)
             ) {
-                composable(route = Screen.Favorites.route) { FavoritesScreen(navController) }
                 composable(route = Screen.List.route) { ListScreen(navController) }
                 composable(route = Screen.Details.route) { backStackEntry ->
                     val movieId = backStackEntry.arguments?.getString("movieId")?.toInt() ?: 0
                     DetailsScreen(navController, movieId)
                 }
+                composable(route = Screen.Favorites.route) { FavoritesScreen(navController) }
+                composable(route = Screen.Profile.route) { ProfileScreen(navController) }
+                composable(route = Screen.EditProfile.route) { EditProfileScreen(navController) }
             }
         }
     }
@@ -95,7 +115,8 @@ fun getLabel(label: String): @Composable () -> Unit {
         Text(
             text = label,
             color = Color.White,
-            style = Typography.labelSmall
+            style = Typography.labelSmall,
+            fontSize = 12.sp
         )
     }
 }

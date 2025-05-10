@@ -2,6 +2,7 @@
     <string name="app_name">AndroidPractice</string>
     <string name="movie_list_label">Список фильмов</string>
     <string name="favorites_label">Мои фильмы</string>
+    <string name="profile_label">Профиль</string>
     <string name="genres">Жанры:\u00A0</string>
     <string name="countries">Страны:\u00A0</string>
     <string name="actors">В главных ролях:</string>

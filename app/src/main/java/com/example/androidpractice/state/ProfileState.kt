@@ -6,6 +6,7 @@ interface ProfileState {
     val resumeUrl: String
     val position: String
     val email: String
+    val favoriteClassTime: String
     val isLoading: Boolean
     val error: String?
 }

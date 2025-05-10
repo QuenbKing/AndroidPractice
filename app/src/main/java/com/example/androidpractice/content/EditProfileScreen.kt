@@ -1,15 +1,18 @@
 package com.example.androidpractice.content
 
 import android.Manifest
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,11 +52,15 @@ import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.androidpractice.domain.model.Profile
+import com.example.androidpractice.utils.NotificationUtils
 import com.example.androidpractice.viewModel.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +93,8 @@ fun EditProfileScreen(navigation: NavHostController) {
         )
     }
 
+    var timeError by remember { mutableStateOf<String?>(null) }
+
     val storagePermissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             hasStoragePermission = isGranted
@@ -96,6 +107,31 @@ fun EditProfileScreen(navigation: NavHostController) {
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             hasCameraPermission = isGranted
         }
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (!isGranted) {
+                timeError = "Для получения уведомлений требуется разрешение"
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        LaunchedEffect(Unit) {
+            if (!NotificationUtils.areNotificationsEnabled(context)) {
+                timeError = "Уведомления отключены в настройках системы"
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                }
+                context.startActivity(intent)
+            } else if (!NotificationUtils.hasNotificationPermission(context)) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     if (!hasStoragePermission) {
         AlertDialog(
@@ -148,6 +184,7 @@ fun EditProfileScreen(navigation: NavHostController) {
     var email by remember(state.email) { mutableStateOf(state.email) }
     var avatarUri by remember(state.avatarUri) { mutableStateOf(state.avatarUri) }
     var resumeUrl by remember(state.resumeUrl) { mutableStateOf(state.resumeUrl) }
+    var favoriteClassTime by remember(state.favoriteClassTime) { mutableStateOf(state.favoriteClassTime) }
 
     var showImageSourceDialog by remember { mutableStateOf(false) }
     var tempImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -233,15 +270,20 @@ fun EditProfileScreen(navigation: NavHostController) {
                 actions = {
                     Button(
                         onClick = {
-                            viewModel.onSaveProfile(
-                                Profile(
-                                    fio = fio,
-                                    position = position,
-                                    email = email,
-                                    avatarUri = avatarUri,
-                                    resumeUrl = resumeUrl
+                            if (isValidTime(favoriteClassTime)) {
+                                viewModel.onSaveProfile(
+                                    Profile(
+                                        fio = fio,
+                                        position = position,
+                                        email = email,
+                                        avatarUri = avatarUri,
+                                        resumeUrl = resumeUrl,
+                                        favoriteClassTime = favoriteClassTime
+                                    )
                                 )
-                            )
+                            } else {
+                                timeError = "Введите время в формате HH:mm"
+                            }
                         }
                     ) {
                         Text("Сохранить")
@@ -315,7 +357,62 @@ fun EditProfileScreen(navigation: NavHostController) {
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = favoriteClassTime,
+                        onValueChange = {
+                            favoriteClassTime = it
+                            timeError =
+                                if (isValidTime(it)) null else "Введите время в формате HH:mm"
+                        },
+                        label = { Text("Время любимой пары") },
+                        modifier = Modifier.weight(1f),
+                        isError = timeError != null,
+                        supportingText = {
+                            timeError?.let { Text(it) }
+                        }
+                    )
+                    IconButton(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    favoriteClassTime = String.format("%02d:%02d", hour, minute)
+                                    timeError = null
+                                },
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.DateRange,
+                            contentDescription = "Выбрать время",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+private fun isValidTime(time: String): Boolean {
+    if (time.isEmpty()) return false
+    return try {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        format.isLenient = false
+        format.parse(time)
+        true
+    } catch (e: Exception) {
+        false
     }
 }

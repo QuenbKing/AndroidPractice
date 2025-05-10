@@ -1,11 +1,15 @@
 package com.example.androidpractice.viewModel
 
+import android.app.AlarmManager
 import android.app.DownloadManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Environment
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,12 +20,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.example.androidpractice.content.Screen
+import com.example.androidpractice.content.notification.NotificationReceiver
 import com.example.androidpractice.domain.model.Profile
 import com.example.androidpractice.domain.repository.IProfileRepository
 import com.example.androidpractice.state.ProfileState
+import com.example.androidpractice.utils.NotificationUtils
 import com.example.androidpractice.utils.launchLoadingAndError
 import org.koin.java.KoinJavaComponent
 import java.io.File
+import java.util.Calendar
 import java.util.Date
 
 class ProfileViewModel(
@@ -158,11 +165,83 @@ class ProfileViewModel(
         ) {
             val profileSaved = repository.setProfile(profile = profile)
             updateState(profileSaved)
+            if (profile.favoriteClassTime.isNotEmpty()) {
+                scheduleClassNotification(profile.favoriteClassTime, profile.fio)
+            }
+
             navigation.navigate(route = Screen.Profile.route) {
                 popUpTo(0) { inclusive = true }
             }
         }
     }
+
+    private fun scheduleClassNotification(time: String, name: String) {
+        try {
+            if (!NotificationUtils.hasNotificationPermission(context)) {
+                mutableState.error = "Требуется разрешение на отправку уведомлений"
+                return
+            }
+
+            if (!NotificationUtils.areNotificationsEnabled(context)) {
+                mutableState.error = "Уведомления отключены в настройках системы"
+                return
+            }
+
+            val alarmMgr = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val (hour, minute) = time.split(":").map { it.toInt() }
+
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.DATE, 1)
+                }
+            }
+
+            val intent = Intent(context, NotificationReceiver::class.java).apply {
+                putExtra("profile_name", name)
+                action = "com.example.androidpractice.NOTIFICATION"
+            }
+
+            val pi = PendingIntent.getBroadcast(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (!alarmMgr.canScheduleExactAlarms()) {
+                    Log.w(
+                        "ProfileViewModel",
+                        "Cannot schedule exact alarms, using setAndAllowWhileIdle"
+                    )
+                    alarmMgr.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.timeInMillis,
+                        pi
+                    )
+                } else {
+                    alarmMgr.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.timeInMillis,
+                        pi
+                    )
+                }
+            } else {
+                alarmMgr.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    cal.timeInMillis,
+                    pi
+                )
+            }
+
+            Log.d("ProfileViewModel", "Notification scheduled for ${cal.time}")
+        } catch (e: Exception) {
+            Log.e("ProfileViewModel", "Error scheduling notification", e)
+            mutableState.error = "Ошибка при установке уведомления: ${e.message}"
+        }
+    }
+
 
     private fun updateState(profile: Profile) {
         mutableState.fio = profile.fio
@@ -170,6 +249,7 @@ class ProfileViewModel(
         mutableState.resumeUrl = profile.resumeUrl
         mutableState.position = profile.position
         mutableState.email = profile.email
+        mutableState.favoriteClassTime = profile.favoriteClassTime
     }
 
     class MutableProfileState : ProfileState {
@@ -178,6 +258,7 @@ class ProfileViewModel(
         override var resumeUrl: String by mutableStateOf("")
         override var position: String by mutableStateOf("")
         override var email: String by mutableStateOf("")
+        override var favoriteClassTime: String by mutableStateOf("")
         override var isLoading: Boolean by mutableStateOf(false)
         override var error: String? by mutableStateOf(null)
     }
